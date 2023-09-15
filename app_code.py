@@ -162,7 +162,6 @@ with tab2:
         # plt.ylabel('Total Expense Ratio')
 
         # Convert the DataFrame to a text format
-        api_key = "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"
         data = {
             'Business Mix Impact': [BusinessMixImpact],
             'Sales Impact': [SalesImpact],

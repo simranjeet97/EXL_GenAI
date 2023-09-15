@@ -184,15 +184,15 @@ with tab2:
 
         #st.write(prompt)
 
-        # def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.9): 
-        #     messages = [{"role": "user", "content": prompt}]
-        #     response = openai.ChatCompletion.create(
-        #         model=model,
-        #         messages=messages,
-        #         temperature=temperature,
-        #         api_key="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"
-        #     )
-        #     return response.choices[0].message["content"]
+        def get_completion(prompt, model="gpt-3.5-turbo", temperature=0.9): 
+            messages = [{"role": "user", "content": prompt}]
+            response = openai.ChatCompletion.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                api_key=st.secrets.api_key
+            )
+            return response.choices[0].message["content"]
 
         # # def get_analysis(api_key,prompt): 
         # #     # Use the OpenAI API to generate differences
@@ -209,11 +209,11 @@ with tab2:
         # #     return analysis
 
         # # analysis = get_analysis(Diff_AF,eir_text,api_key)
-        # completition = get_completion(prompt)
+        completition = get_completion(prompt)
         # # st.write(analysis)
         # # st.markdown("#### GenAI Financial Analysis:")
-        # st.write(completition)
-        # with open('dump.txt','a') as file:
-        #     file.write(completition)
-        #     file.write("\n\n")
+        st.write(completition)
+        with open('dump.txt','a') as file:
+            file.write(completition)
+            file.write("\n\n")
         # # print(analysis)            

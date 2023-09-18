@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import openai
+import re
 
 #EXL logo
 image = Image.open('exl.png')
@@ -70,7 +71,22 @@ with tab1:
         st.dataframe(adjusted_df)
         st.markdown(f"*All Numbers is in Billions. ")
 
-        new_total = st.number_input("Enter New Finance Total:", min_value=0.01, value=adjusted_df.loc[adjusted_df['LOB'] == 'Total', 'Annual_Premium'].values[0])
+        # Text input for the user
+        text = st.text_input("Enter Text:")
+
+        # Regular expression pattern to find numbers or floating numbers
+        pattern = r'([-+]?\d*\.\d+)'
+
+        # Find numbers or floating numbers in the input text
+        numbers_found = re.findall(pattern, text)
+
+        # Default value for the new finance total
+        default_value = None
+
+        if numbers_found:
+            default_value = float(numbers_found[0])
+
+        new_total = default_value if default_value is not None else adjusted_df.loc[adjusted_df['LOB'] == 'Total', 'Annual_Premium'].values[0]
 
         # Calculate the proportion of each LOB's 'Annual_Premium' in the 'Total' and express it as a percentage
         if 'Total' in adjusted_df['LOB'].values:
@@ -80,10 +96,24 @@ with tab1:
         # Update the 'Annual_Premium' values for all LOBs based on the proportion
         adjusted_df['Annual_Premium'] = adjusted_df.apply(lambda row: new_total * row['Proportion (%)']/100 if row['LOB'] != 'Total' else new_total, axis=1)
 
-
         st.subheader("Updated Finance Adjustment")
         # Display the updated DataFrame
         st.dataframe(adjusted_df)
+        
+
+        # new_total = st.number_input("Enter New Finance Total:", min_value=0.01, value=adjusted_df.loc[adjusted_df['LOB'] == 'Total', 'Annual_Premium'].values[0])
+
+        # # Calculate the proportion of each LOB's 'Annual_Premium' in the 'Total' and express it as a percentage
+        # if 'Total' in adjusted_df['LOB'].values:
+        #     total_annual_premium = adjusted_df[adjusted_df['LOB'] == 'Total']['Annual_Premium'].values[0]
+        #     adjusted_df['Proportion (%)'] = (adjusted_df['Annual_Premium'] / total_annual_premium) * 100
+
+        # # Update the 'Annual_Premium' values for all LOBs based on the proportion
+        # adjusted_df['Annual_Premium'] = adjusted_df.apply(lambda row: new_total * row['Proportion (%)']/100 if row['LOB'] != 'Total' else new_total, axis=1)
+
+        # st.subheader("Updated Finance Adjustment")
+        # # Display the updated DataFrame
+        # st.dataframe(adjusted_df)
 
     else:
         st.write("Please Upload the Files.")
@@ -110,10 +140,20 @@ with tab2:
         col1.dataframe(Show_Dataframe[['LOB','Total Expense Ratio']])
         col2.dataframe(Show_Dataframe[['LOB','Change in Annual Premium (%)']])
 
-        color_scale1 = 'Viridis'  
+        # Custom colors for each 'LOB' label
+        custom_colors = {
+            'Par': 'skyblue',
+            'Non Par': 'lightgreen',
+            'Universal Life': 'gold',
+            'Health': 'darksalmon',
+            'Group': 'gray',
+            'Total':'black'
+        }
+
+        color_scale1 = 'Viridis'
         fig = make_subplots(rows=1, cols=2, subplot_titles=("Total Expense Ratio (%)", "Change in Annual Premium (%)"))
-        fig.add_trace(go.Bar(x=Diff_AF['LOB'], y=Diff_AF['Total Expense Ratio'], marker=dict(color=Diff_AF['Total Expense Ratio'], colorscale=color_scale1)), row=1, col=1)
-        fig.add_trace(go.Bar(x=Diff_AF['LOB'], y=Diff_AF['Change in Annual Premium (%)'], marker=dict(color=Diff_AF['Change in Annual Premium (%)'], colorscale=color_scale1)), row=1, col=2)
+        fig.add_trace(go.Bar(x=Diff_AF['LOB'], y=Diff_AF['Total Expense Ratio'], marker=dict(color=[custom_colors.get(lob, 'gold') for lob in Diff_AF['LOB']], colorscale=color_scale1)), row=1, col=1)
+        fig.add_trace(go.Bar(x=Diff_AF['LOB'], y=Diff_AF['Change in Annual Premium (%)'], marker=dict(color=[custom_colors.get(lob, 'gold') for lob in Diff_AF['LOB']], colorscale=color_scale1)), row=1, col=2)
         fig.update_layout(title="Total Expense Ratio (%) and Change in Annual Premium (%)", showlegend=False)
         st.plotly_chart(fig)
 
@@ -124,8 +164,8 @@ with tab2:
 
         actuarial_value = actual_df.loc[actual_df.LOB == 'Total','Annual_Premium'].values[0]
         adjusted_value = adjusted_df.loc[adjusted_df.LOB == 'Total','Annual_Premium'].values[0]
-        st.markdown(f"- Total Sales for Actuarial is: {actuarial_value}")
-        st.markdown(f"- Total Sales for Finance is: {adjusted_value}")
+        st.markdown(f"- Total Sales for Actuarial is: ${actuarial_value} Bn")
+        st.markdown(f"- Total Sales for Finance is: ${adjusted_value} Bn")
 
         # fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2,figsize=(15, 5))
         # ax1.set_title("Total Expense Ratio for Each LOB")
@@ -190,7 +230,7 @@ with tab2:
                 model=model,
                 messages=messages,
                 temperature=temperature,
-                api_key=st.secrets['openai']["OPENAI_API_KEY"]
+                api_key=st.secrets['openai']['OPENAI_API_KEY']
             )
             return response.choices[0].message["content"]
 

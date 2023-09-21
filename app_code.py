@@ -29,28 +29,35 @@ tab1, tab2 = st.tabs(['Data','Analysis'])
 def get_expense_prop(actual_df):
     # Building Expense Proportions % AP
     Exp_AP = pd.DataFrame()
-    Exp_AP['Commission %'] = actual_df['Commissions'] / actual_df['Annual_Premium'] * 100
-    Exp_AP['PerPolicy %'] = actual_df['Per_Policy'] / actual_df['Annual_Premium'] * 100
-    Exp_AP['PerSumAssured %'] = actual_df['Per_Sum_Assured'] / actual_df['Annual_Premium'] * 100
-    Exp_AP['PerPremium %'] = actual_df['Per_Premium'] / actual_df['Annual_Premium'] * 100
-    Exp_AP['Total %'] = actual_df['Total'] / actual_df['Annual_Premium'] * 100
+    Exp_AP['Commission %'] = round(100 * actual_df['Commissions'] / actual_df['Annual_Premium'],0)
+    Exp_AP['PerPolicy %'] = round(100 * actual_df['Per_Policy'] / actual_df['Annual_Premium'],0)
+    Exp_AP['PerSumAssured %'] = round(100 * actual_df['Per_Sum_Assured'] / actual_df['Annual_Premium'],0) 
+    Exp_AP['PerPremium %'] = round(100 * actual_df['Per_Premium'] / actual_df['Annual_Premium'],0)
+    Exp_AP['Total %'] = round(100 * actual_df['Total'] / actual_df['Annual_Premium'],0)
     Exp_AP['LOB'] = actual_df['LOB']
+    #print(Exp_AP)
     return Exp_AP
+    
 
 def get_diff(actual_df,adjusted_df):
     Exp_AP = get_expense_prop(actual_df)
     anum_pr = actual_df['Annual_Premium'].iloc[-1]
+    finace_pr = adjusted_df['Annual_Premium'].iloc[-1]
     # Differences between Actuarial and Finance Adjustment Numbers
     Diff_AF = pd.DataFrame()
-    Diff_AF['Actuarial'] = actual_df['Annual_Premium'] / anum_pr * 100
-    Diff_AF['Finance'] = adjusted_df['Annual_Premium'] / anum_pr * 100
+    Diff_AF['Actuarial'] = 100 * actual_df['Annual_Premium'] / anum_pr
+    Diff_AF['Finance'] = 100 * adjusted_df['Annual_Premium'] / finace_pr
     Diff_AF['Total Expense Ratio'] = Exp_AP['Total %'] #---------Against LOB
     Diff_AF['Change in Annual Premium (%)'] = Diff_AF['Finance'] - Diff_AF['Actuarial'] #-------Aginst LOB with cols
-    Diff_AF['Impact_on_Ratio'] = round((Diff_AF['Change in Annual Premium (%)'] * Diff_AF['Total Expense Ratio'] * actual_df['Annual_Premium'].iloc[-1]) / 10000, 2)
+    Diff_AF['Impact_on_Ratio'] = (Diff_AF['Change in Annual Premium (%)'] * Diff_AF['Total Expense Ratio'] * actual_df['Annual_Premium'].iloc[-1]) / 10000
     total_impact = Diff_AF['Impact_on_Ratio'].sum()
+    Diff_AF['Impact_on_Ratio'] = round(Diff_AF['Impact_on_Ratio'],2)
     Diff_AF.at[5, 'Impact_on_Ratio'] = total_impact
-    Diff_AF['TotalExpRatio'] = adjusted_df['Total'] / adjusted_df['Annual_Premium'] * 100
+    Diff_AF['TotalExpRatio'] = round(100 * adjusted_df['Total'] / adjusted_df['Annual_Premium'],0)
     Diff_AF['LOB'] = actual_df['LOB']
+    #print(actual_df)
+    #print(adjusted_df)
+    #print(Diff_AF)
     return Diff_AF
 
 
